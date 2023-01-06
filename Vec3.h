@@ -1,4 +1,3 @@
-
 #ifndef RAY_TRACING_IN_CPP_VEC3_H
 #define RAY_TRACING_IN_CPP_VEC3_H
 
