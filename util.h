@@ -38,4 +38,10 @@ inline double random_double(double lower_bound, double upper_bound) {
     return lower_bound + (upper_bound - lower_bound) * random_double();
 }
 
+inline double clamp(double x, double min, double max) {
+    if (x < min) { return min; }
+    if (x > max) { return max; }
+    return x;
+}
+
 #endif //RAY_TRACING_IN_CPP_UTIL_H
