@@ -8,15 +8,15 @@ using namespace std;
 
 double hit_sphere(const Point3 &center, double radius, const Ray &ray) {
     Vec3 origin_center = ray.origin() - center;
-    auto a = dot(ray.direction(), ray.direction());
-    auto b = 2.0 * dot(origin_center, ray.direction());
-    auto c = dot(origin_center, origin_center) - radius * radius;
-    auto discriminant = b * b - 4 * a * c;
+    auto a = ray.direction().length_squared();
+    auto half_b = dot(origin_center, ray.direction());
+    auto c = origin_center.length_squared() - radius * radius;
+    auto discriminant = half_b * half_b - a * c;
 
     if (discriminant < 0) {
         return -1.0;
     } else {
-        return (-b - sqrt(discriminant)) / (2.0 * a);
+        return (-half_b - sqrt(discriminant)) / a;
     }
 }
 
