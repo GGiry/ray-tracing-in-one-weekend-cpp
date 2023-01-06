@@ -3,4 +3,4 @@ project(ray_tracing_in_cpp)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(ray_tracing_in_cpp main.cpp Vec3.h)
+add_executable(ray_tracing_in_cpp main.cpp Vec3.h Color.h)
