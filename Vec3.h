@@ -62,4 +62,56 @@ using Point3 = Vec3;
 using Color = Vec3;
 
 
+// Vec3 Utility functions
+
+inline std::ostream &operator<<(std::ostream &out, const Vec3 &v) {
+    return out << v.coordinates[0] << ' ' << v.coordinates[1] << ' ' << v.coordinates[2];
+}
+
+inline Vec3 operator+(const Vec3 &u, const Vec3 &v) {
+    return {u.coordinates[0] + v.coordinates[0],
+            u.coordinates[1] + v.coordinates[1],
+            u.coordinates[2] + v.coordinates[2]};
+}
+
+inline Vec3 operator-(const Vec3 &u, const Vec3 &v) {
+    return {u.coordinates[0] - v.coordinates[0],
+            u.coordinates[1] - v.coordinates[1],
+            u.coordinates[2] - v.coordinates[2]};
+}
+
+inline Vec3 operator*(const Vec3 &u, const Vec3 &v) {
+    return {u.coordinates[0] * v.coordinates[0],
+            u.coordinates[1] * v.coordinates[1],
+            u.coordinates[2] * v.coordinates[2]};
+}
+
+inline Vec3 operator*(double t, const Vec3 &v) {
+    return {t * v.coordinates[0], t * v.coordinates[1], t * v.coordinates[2]};
+}
+
+inline Vec3 operator*(const Vec3 &v, double t) {
+    return t * v;
+}
+
+inline Vec3 operator/(Vec3 v, double t) {
+    return (1 / t) * v;
+}
+
+inline double dot(const Vec3 &u, const Vec3 &v) {
+    return u.coordinates[0] * v.coordinates[0]
+           + u.coordinates[1] * v.coordinates[1]
+           + u.coordinates[2] * v.coordinates[2];
+}
+
+inline Vec3 cross(const Vec3 &u, const Vec3 &v) {
+    return {u.coordinates[1] * v.coordinates[2] - u.coordinates[2] * v.coordinates[1],
+            u.coordinates[2] * v.coordinates[0] - u.coordinates[0] * v.coordinates[2],
+            u.coordinates[0] * v.coordinates[1] - u.coordinates[1] * v.coordinates[0]};
+}
+
+inline Vec3 unit_vector(Vec3 v) {
+    return v / v.length();
+}
+
 #endif //RAY_TRACING_IN_CPP_VEC3_H
