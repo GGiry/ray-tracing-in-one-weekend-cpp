@@ -9,9 +9,14 @@
 
 using namespace std;
 
-Color ray_color(const Ray &ray, const Hittable &world) {
+Color ray_color(const Ray &ray, const Hittable &world, int depth) {
+    if (depth <= 0) {
+        return {0, 0, 0};
+    }
+
     if (Hit_record record; world.hit(ray, 0, infinity, record)) {
-        return 0.5 * (record.normal + Color(1, 1, 1));
+        Point3 target = record.point + record.normal + random_in_unit_sphere();
+        return 0.5 * ray_color(Ray(record.point, target - record.point), world, depth - 1);
     }
 
     Vec3 unit_direction = unit_vector(ray.direction());
@@ -25,6 +30,7 @@ int main() {
     const int image_width = 400;
     const auto image_height = static_cast<int>(image_width / aspect_ratio);
     const int sample_per_pixel = 100;
+    const int max_depth = 50;
 
     // World
     Hittable_list world;
@@ -45,7 +51,7 @@ int main() {
                 auto u = (i + random_double()) / (image_width - 1);
                 auto v = (j + random_double()) / (image_height - 1);
                 Ray ray = camera.get_ray(u, v);
-                pixel_color += ray_color(ray, world);
+                pixel_color += ray_color(ray, world, max_depth);
             }
             write_color(cout, pixel_color, sample_per_pixel);
         }
