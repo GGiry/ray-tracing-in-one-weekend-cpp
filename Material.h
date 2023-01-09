@@ -11,14 +11,40 @@ public:
     virtual bool scatter(const Ray &ray_in, const Hit_record &record, Color &attenuation, Ray &scattered) const = 0;
 };
 
-class SimpleDiffuse : public Material {
+enum class DiffuseType {
+    Simple, TrueLambertian, Alternate
+};
+
+
+class Diffuse : public Material {
 public:
     Color albedo;
+    Vec3 (*scatter_direction_function)(const Vec3 &);
 
-    explicit SimpleDiffuse(const Color &color) : albedo(color) {}
+    explicit Diffuse(const Color &color) : albedo(color) {
+        scatter_direction_function = lambertian;
+    }
+
+    Diffuse(const Color &color, DiffuseType type) : albedo(color) {
+        switch (type) {
+            using enum DiffuseType;
+            case Simple: {
+                scatter_direction_function = simple;
+                break;
+            }
+            case Alternate: {
+                scatter_direction_function = alternate;
+                break;
+            }
+            case TrueLambertian: {
+                scatter_direction_function = lambertian;
+                break;
+            }
+        }
+    }
 
     bool scatter(const Ray &ray_in, const Hit_record &record, Color &attenuation, Ray &scattered) const override {
-        auto scatter_direction = record.normal + random_in_unit_sphere();
+        auto scatter_direction = scatter_direction_function(record.normal);
 
         if (scatter_direction.near_zero()) {
             scatter_direction = record.normal;
@@ -28,45 +54,22 @@ public:
         attenuation = albedo;
         return true;
     }
-};
 
-class TrueLambertian : public Material {
-public:
-    Color albedo;
+private:
 
-    explicit TrueLambertian(const Color &color) : albedo(color) {}
+    static Vec3 simple(const Vec3 &normal) {
+        return normal + random_in_unit_sphere();
+    }
 
-    bool scatter(const Ray &ray_in, const Hit_record &record, Color &attenuation, Ray &scattered) const override {
-        auto scatter_direction = record.normal + random_unit_vector();
+    static Vec3 lambertian(const Vec3 &normal) {
+        return normal + random_unit_vector();
+    }
 
-        if (scatter_direction.near_zero()) {
-            scatter_direction = record.normal;
-        }
-
-        scattered = Ray(record.point, scatter_direction);
-        attenuation = albedo;
-        return true;
+    static Vec3 alternate(const Vec3 &normal) {
+        return random_in_hemisphere(normal);
     }
 };
 
-class AlternateDiffuse : public Material {
-public:
-    Color albedo;
-
-    explicit AlternateDiffuse(const Color &color) : albedo(color) {}
-
-    bool scatter(const Ray &ray_in, const Hit_record &record, Color &attenuation, Ray &scattered) const override {
-        auto scatter_direction = random_in_hemisphere(record.normal);
-
-        if (scatter_direction.near_zero()) {
-            scatter_direction = record.normal;
-        }
-
-        scattered = Ray(record.point, scatter_direction);
-        attenuation = albedo;
-        return true;
-    }
-};
 
 class Metal : public Material {
 public:
