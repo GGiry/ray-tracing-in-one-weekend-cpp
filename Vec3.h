@@ -5,6 +5,8 @@
 #include <iostream>
 #include <array>
 
+#include "util.h"
+
 using std::sqrt;
 
 class Vec3 {
@@ -53,6 +55,14 @@ public:
 
     [[nodiscard]] double length_squared() const {
         return coordinates[0] * coordinates[0] + coordinates[1] * coordinates[1] + coordinates[2] * coordinates[2];
+    }
+
+    inline static Vec3 random() {
+        return {random_double(), random_double(), random_double()};
+    }
+
+    inline static Vec3 random(double min, double max) {
+        return {random_double(min, max), random_double(min, max), random_double(min, max)};
     }
 };
 
@@ -111,6 +121,14 @@ inline Vec3 cross(const Vec3 &u, const Vec3 &v) {
 
 inline Vec3 unit_vector(Vec3 v) {
     return v / v.length();
+}
+
+inline Vec3 random_in_unit_sphere() {
+    while (true) {
+        auto candidate = Vec3::random(-1, 1);
+        if (candidate.length_squared() > 1) { continue; }
+        return candidate;
+    }
 }
 
 #endif //RAY_TRACING_IN_CPP_VEC3_H

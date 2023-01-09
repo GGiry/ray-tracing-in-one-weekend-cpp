@@ -8,10 +8,6 @@
 #include <numbers>
 #include <random>
 
-// Common Headers
-#include "Ray.h"
-#include "Vec3.h"
-
 using std::make_shared;
 using std::shared_ptr;
 using std::sqrt;
@@ -43,5 +39,9 @@ inline double clamp(double x, double min, double max) {
     if (x > max) { return max; }
     return x;
 }
+
+// Common Headers
+#include "Ray.h"
+#include "Vec3.h"
 
 #endif //RAY_TRACING_IN_CPP_UTIL_H
