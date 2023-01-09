@@ -27,15 +27,16 @@ public:
 
     Diffuse(const Color &color, DiffuseType type) : albedo(color) {
         switch (type) {
-            case DiffuseType::Simple: {
+            using enum DiffuseType;
+            case Simple: {
                 scatter_direction_function = simple;
                 break;
             }
-            case DiffuseType::Alternate: {
+            case Alternate: {
                 scatter_direction_function = alternate;
                 break;
             }
-            case DiffuseType::TrueLambertian: {
+            case TrueLambertian: {
                 scatter_direction_function = lambertian;
                 break;
             }
