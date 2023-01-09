@@ -1,11 +1,14 @@
 #ifndef RAY_TRACING_IN_CPP_HITTABLE_H
 #define RAY_TRACING_IN_CPP_HITTABLE_H
 
-#include "Ray.h"
+#include "util.h"
+
+class Material;
 
 struct Hit_record {
     Point3 point;
     Vec3 normal;
+    shared_ptr<Material> material_ptr;
     double t = 0.0;
     bool front_face = false;
 
