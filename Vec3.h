@@ -64,6 +64,11 @@ public:
     inline static Vec3 random(double min, double max) {
         return {random_double(min, max), random_double(min, max), random_double(min, max)};
     }
+
+    [[nodiscard]] bool near_zero() const {
+        const auto delta = 1e-8;
+        return fabs(coordinates[0]) < delta && fabs(coordinates[1]) < delta && fabs(coordinates[2]) < delta;
+    }
 };
 
 // Type aliases for Vec3
