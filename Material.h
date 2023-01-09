@@ -15,7 +15,6 @@ enum class DiffuseType {
     Simple, TrueLambertian, Alternate
 };
 
-
 class Diffuse : public Material {
 public:
     Color albedo;
@@ -70,7 +69,6 @@ private:
     }
 };
 
-
 class Metal : public Material {
 public:
     Color albedo;
@@ -84,6 +82,25 @@ public:
         attenuation = albedo;
         return (dot(scattered.direction(), rec.normal) > 0);
     }
+};
+
+class Dielectric : public Material {
+public:
+    double _index_of_refraction; // Index of Refraction
+
+    explicit Dielectric(double index_of_refraction) : _index_of_refraction(index_of_refraction) {}
+
+    bool scatter(const Ray &r_in, const Hit_record &rec, Color &attenuation, Ray &scattered) const override {
+        attenuation = Color(1.0, 1.0, 1.0);
+        double refraction_ratio = rec.front_face ? (1.0 / _index_of_refraction) : _index_of_refraction;
+
+        Vec3 unit_direction = unit_vector(r_in.direction());
+        Vec3 refracted = refract(unit_direction, rec.normal, refraction_ratio);
+
+        scattered = Ray(rec.point, refracted);
+        return true;
+    }
+
 };
 
 #endif //RAY_TRACING_IN_CPP_MATERIAL_H

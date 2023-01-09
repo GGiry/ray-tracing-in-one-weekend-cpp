@@ -153,4 +153,11 @@ inline Vec3 reflect(const Vec3 &v, const Vec3 &n) {
     return v - 2 * dot(v, n) * n;
 }
 
+inline Vec3 refract(const Vec3 &uv, const Vec3 &n, double eta_over_eta_prime) {
+    auto cos_theta = fmin(dot(-uv, n), 1.0);
+    Vec3 r_out_perpendicular = eta_over_eta_prime * (uv + cos_theta * n);
+    Vec3 r_out_parallel = -sqrt(fabs(1.0 - r_out_perpendicular.length_squared())) * n;
+    return r_out_perpendicular + r_out_parallel;
+}
+
 #endif //RAY_TRACING_IN_CPP_VEC3_H
