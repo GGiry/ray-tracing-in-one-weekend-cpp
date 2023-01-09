@@ -19,6 +19,7 @@ enum class DiffuseType {
 class Diffuse : public Material {
 public:
     Color albedo;
+
     Vec3 (*scatter_direction_function)(const Vec3 &);
 
     explicit Diffuse(const Color &color) : albedo(color) {
@@ -27,16 +28,15 @@ public:
 
     Diffuse(const Color &color, DiffuseType type) : albedo(color) {
         switch (type) {
-            using enum DiffuseType;
-            case Simple: {
+            case DiffuseType::Simple: {
                 scatter_direction_function = simple;
                 break;
             }
-            case Alternate: {
+            case DiffuseType::Alternate: {
                 scatter_direction_function = alternate;
                 break;
             }
-            case TrueLambertian: {
+            case DiffuseType::TrueLambertian: {
                 scatter_direction_function = lambertian;
                 break;
             }
@@ -74,12 +74,13 @@ private:
 class Metal : public Material {
 public:
     Color albedo;
+    double fuzziness;
 
-    explicit Metal(const Color &a) : albedo(a) {}
+    Metal(const Color &a, double fuzz) : albedo(a), fuzziness(fuzz < 1 ? fuzz : 1) {}
 
     bool scatter(const Ray &r_in, const Hit_record &rec, Color &attenuation, Ray &scattered) const override {
         Vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
-        scattered = Ray(rec.point, reflected);
+        scattered = Ray(rec.point, reflected + fuzziness * random_in_unit_sphere());
         attenuation = albedo;
         return (dot(scattered.direction(), rec.normal) > 0);
     }
