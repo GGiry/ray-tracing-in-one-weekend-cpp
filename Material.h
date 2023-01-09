@@ -68,4 +68,18 @@ public:
     }
 };
 
+class Metal : public Material {
+public:
+    Color albedo;
+
+    explicit Metal(const Color &a) : albedo(a) {}
+
+    bool scatter(const Ray &r_in, const Hit_record &rec, Color &attenuation, Ray &scattered) const override {
+        Vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
+        scattered = Ray(rec.point, reflected);
+        attenuation = albedo;
+        return (dot(scattered.direction(), rec.normal) > 0);
+    }
+};
+
 #endif //RAY_TRACING_IN_CPP_MATERIAL_H
