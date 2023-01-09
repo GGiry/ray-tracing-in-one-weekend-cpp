@@ -131,4 +131,8 @@ inline Vec3 random_in_unit_sphere() {
     }
 }
 
+inline Vec3 random_unit_vector() {
+    return unit_vector(random_in_unit_sphere());
+}
+
 #endif //RAY_TRACING_IN_CPP_VEC3_H
