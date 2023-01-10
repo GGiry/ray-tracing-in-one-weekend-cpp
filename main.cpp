@@ -5,8 +5,10 @@
 #include "Hittable_list.h"
 #include "Sphere.h"
 #include "Material.h"
+#include "Moving_sphere.h"
 
 #include <iostream>
+
 
 using namespace std;
 
@@ -30,6 +32,17 @@ shared_ptr<Material> select_material(double choose_mat) {
     return sphere_material;
 }
 
+shared_ptr<Hittable>
+create_object(double choose_mat, const Point3 &center, const shared_ptr<Material> &sphere_material) {
+    if (choose_mat < 0.8) {
+        auto center2 = center + Vec3(0, random_double(0, 0.5), 0);
+        return make_shared<Moving_sphere>(center, center2, 0, 1, 0.2, sphere_material);
+    } else {
+        return make_shared<Sphere>(center, 0.2, sphere_material);
+    }
+}
+
+
 Hittable_list random_scene() {
     Hittable_list world;
 
@@ -43,7 +56,9 @@ Hittable_list random_scene() {
 
             if ((center - Point3(4, 0.2, 0)).length() > 0.9) {
                 shared_ptr<Material> sphere_material = select_material(choose_mat);
-                world.add(make_shared<Sphere>(center, 0.2, sphere_material));
+
+                world.add(create_object(choose_mat, center, sphere_material));
+
             }
         }
     }
@@ -81,10 +96,9 @@ Color ray_color(const Ray &ray, const Hittable &world, int depth) {
 
 int main() {
     // Image
-    const auto aspect_ratio = 3.0 / 2.0;
-    const int image_width = 1200;
-    const auto image_height = static_cast<int>(image_width / aspect_ratio);
-    const int sample_per_pixel = 500;
+    const auto aspect_ratio = 16.0 / 9.0;
+    const int image_width = 400;
+    const int sample_per_pixel = 100;
     const int max_depth = 50;
 
     // World
@@ -96,7 +110,9 @@ int main() {
     const Vec3 view_up(0, 1, 0);
     auto distance_to_focus = 10.0;
     auto aperture = 0.1;
-    Camera camera(look_from, look_at, view_up, 20, aspect_ratio, aperture, distance_to_focus);
+    const auto image_height = static_cast<int>(image_width / aspect_ratio);
+
+    Camera camera(look_from, look_at, view_up, 20, aspect_ratio, aperture, distance_to_focus, 0, 1);
 
     // Render
     cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
