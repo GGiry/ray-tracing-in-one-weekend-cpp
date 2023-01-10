@@ -54,6 +54,17 @@ Hittable_list two_spheres() {
     return objects;
 }
 
+Hittable_list two_perlin_spheres() {
+    Hittable_list objects;
+
+    auto perlin_texture = make_shared<Noise_texture>();
+
+    objects.add(make_shared<Sphere>(Point3(0, -1000, 0), 1000, make_shared<Diffuse>(perlin_texture)));
+    objects.add(make_shared<Sphere>(Point3(0, 2, 0), 2, make_shared<Diffuse>(perlin_texture)));
+
+    return objects;
+}
+
 Hittable_list random_scene() {
     Hittable_list world;
 
@@ -120,7 +131,7 @@ int main() {
 
     Hittable_list world;
 
-    switch (2) {
+    switch (0) {
         case 1:
             world = random_scene();
             look_from = Point3(13, 2, 3);
@@ -131,8 +142,15 @@ int main() {
 
 
         case 2:
-        default:
             world = two_spheres();
+            look_from = Point3(13, 2, 3);
+            look_at = Point3(0, 0, 0);
+            vertical_field_of_view = 20;
+            break;
+
+        default:
+            //case 3:
+            world = two_perlin_spheres();
             look_from = Point3(13, 2, 3);
             look_at = Point3(0, 0, 0);
             vertical_field_of_view = 20;

@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "util.h"
+#include "perlin.h"
 
 class Texture {
 public:
@@ -41,12 +42,23 @@ public:
     Checker_texture(Color _even, Color _odd) : even(std::make_shared<Solid_color>(_even)),
                                                odd(std::make_shared<Solid_color>(_odd)) {}
 
-    Color value(double u, double v, const Point3 &point) const override {
+    [[nodiscard]] Color value(double u, double v, const Point3 &point) const override {
 
         if (auto sines = sin(10 * point.x()) * sin(10 * point.y()) * sin(10 * point.z()); sines < 0) {
             return odd->value(u, v, point);
         }
         return even->value(u, v, point);
+    }
+};
+
+class Noise_texture : public Texture {
+public:
+    Perlin noise;
+
+    Noise_texture() = default;
+
+    [[nodiscard]] Color value(double u, double v, const Point3 &point) const override {
+        return Color(1, 1, 1) * noise.noise(point);
     }
 };
 
