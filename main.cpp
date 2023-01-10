@@ -43,6 +43,16 @@ create_object(double choose_mat, const Point3 &center, const shared_ptr<Material
     }
 }
 
+Hittable_list two_spheres() {
+    Hittable_list objects;
+
+    auto checker = make_shared<Checker_texture>(Color(0.2, 0.3, 0.1), Color(0.9, 0.9, 0.9));
+
+    objects.add(make_shared<Sphere>(Point3(0, -10, 0), 10, make_shared<Diffuse>(checker)));
+    objects.add(make_shared<Sphere>(Point3(0, 10, 0), 10, make_shared<Diffuse>(checker)));
+
+    return objects;
+}
 
 Hittable_list random_scene() {
     Hittable_list world;
@@ -103,18 +113,40 @@ int main() {
     const int max_depth = 50;
 
     // World
-    Hittable_list world = random_scene();
+    Point3 look_from;
+    Point3 look_at;
+    auto vertical_field_of_view = 40.0;
+    auto aperture = 0.0;
+
+    Hittable_list world;
+
+    switch (2) {
+        case 1:
+            world = random_scene();
+            look_from = Point3(13, 2, 3);
+            look_at = Point3(0, 0, 0);
+            vertical_field_of_view = 20;
+            aperture = 0.1;
+            break;
+
+
+        case 2:
+        default:
+            world = two_spheres();
+            look_from = Point3(13, 2, 3);
+            look_at = Point3(0, 0, 0);
+            vertical_field_of_view = 20;
+            break;
+    }
+
     BVH_node bvh(world, 0, 1);
 
     // Camera
-    const Point3 look_from(13, 2, 3);
-    const Point3 look_at(0, 0, 0);
     const Vec3 view_up(0, 1, 0);
     auto distance_to_focus = 10.0;
-    auto aperture = 0.1;
     const auto image_height = static_cast<int>(image_width / aspect_ratio);
 
-    Camera camera(look_from, look_at, view_up, 20, aspect_ratio, aperture, distance_to_focus, 0, 1);
+    Camera camera(look_from, look_at, view_up, vertical_field_of_view, aspect_ratio, aperture, distance_to_focus, 0, 1);
 
     // Render
     cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
