@@ -48,7 +48,7 @@ int main() {
     // Scene with 2 spheres, one red, one blue : red_blue_sphere(world);
 
     // Camera
-    Camera camera(Point3(-2, 2, 1), Point3(0, 0, -1), Vec3(0, 1, 0), 90.0, aspect_ratio);
+    Camera camera(Point3(-2, 2, 1), Point3(0, 0, -1), Vec3(0, 1, 0), 20.0, aspect_ratio);
 
     // Render
     cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";

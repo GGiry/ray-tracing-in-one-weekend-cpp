@@ -31,8 +31,8 @@ public:
         lower_left_corner = origin - horizontal / 2 - vertical / 2 - w;
     }
 
-    [[nodiscard]] Ray get_ray(double u, double v) const {
-        return {origin, lower_left_corner + u * horizontal + v * vertical - origin};
+    [[nodiscard]] Ray get_ray(double s, double t) const {
+        return {origin, lower_left_corner + s * horizontal + t * vertical - origin};
     }
 };
 
