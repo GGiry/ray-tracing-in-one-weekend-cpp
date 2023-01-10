@@ -18,13 +18,15 @@ public:
 
     [[nodiscard]] bool hit(const Ray &ray, double t_min, double t_max) const {
         for (int a = 0; a < 3; a++) {
-            auto t0 = fmin((minimum[a] - ray.origin()[a]) / ray.direction()[a],
-                           (maximum[a] - ray.origin()[a]) / ray.direction()[a]);
-            auto t1 = fmax((minimum[a] - ray.origin()[a]) / ray.direction()[a],
-                           (maximum[a] - ray.origin()[a]) / ray.direction()[a]);
+            auto inverse_direction = 1.0 / ray.direction()[a];
 
-            t_min = fmax(t0, t_min);
-            t_max = fmin(t1, t_max);
+            auto t0 = (min()[a] - ray.origin()[a]) * inverse_direction;
+            auto t1 = (max()[a] - ray.origin()[a]) * inverse_direction;
+
+            if (inverse_direction < 0.0) { std::swap(t0, t1); }
+
+            t_min = t0 > t_min ? t0 : t_min;
+            t_max = t1 < t_max ? t1 : t_max;
 
             if (t_max <= t_min) {
                 return false;
