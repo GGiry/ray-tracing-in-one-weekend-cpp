@@ -11,19 +11,24 @@ public:
     Vec3 vertical;
 
     Camera(
-            double vfov,    // Vertical field-of-view in degree
+            Point3 look_from,
+            Point3 look_at,
+            Vec3 view_up,
+            double vertical_field_of_view,    // Vertical field-of-view in degree
             double aspect_ratio
-    ) {
-        auto theta = degrees_to_radians(vfov);
+    ) : origin(look_from) {
+        auto theta = degrees_to_radians(vertical_field_of_view);
         auto h = tan(theta / 2);
         auto viewport_height = 2.0 * h;
         auto viewport_width = aspect_ratio * viewport_height;
 
-        auto focal_length = 1.0;
+        auto w = unit_vector(look_from - look_at);
+        auto u = unit_vector(cross(view_up, w));
+        auto v = cross(w, u);
 
-        horizontal = Vec3(viewport_width, 0.0, 0.0);
-        vertical = Vec3(0.0, viewport_height, 0.0);
-        lower_left_corner = origin - horizontal / 2 - vertical / 2 - Vec3(0, 0, focal_length);
+        horizontal = viewport_width * u;
+        vertical = viewport_height * v;
+        lower_left_corner = origin - horizontal / 2 - vertical / 2 - w;
     }
 
     [[nodiscard]] Ray get_ray(double u, double v) const {
