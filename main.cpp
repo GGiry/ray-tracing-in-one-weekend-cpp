@@ -1,5 +1,6 @@
 #include "util.h"
 
+#include "bvh.h"
 #include "Camera.h"
 #include "Color.h"
 #include "Hittable_list.h"
@@ -103,6 +104,7 @@ int main() {
 
     // World
     Hittable_list world = random_scene();
+    BVH_node bvh(world, 0, 1);
 
     // Camera
     const Point3 look_from(13, 2, 3);
@@ -125,7 +127,7 @@ int main() {
                 auto u = (i + random_double()) / (image_width - 1);
                 auto v = (j + random_double()) / (image_height - 1);
                 Ray ray = camera.get_ray(u, v);
-                pixel_color += ray_color(ray, world, max_depth);
+                pixel_color += ray_color(ray, bvh, max_depth);
             }
             write_color(cout, pixel_color, sample_per_pixel);
         }

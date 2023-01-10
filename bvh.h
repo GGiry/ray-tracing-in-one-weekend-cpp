@@ -40,14 +40,46 @@ bool BVH_node::hit(const Ray &ray, double t_min, double t_max, Hit_record &recor
     return hit_left || hit_right;
 }
 
+inline bool box_compare(const shared_ptr<Hittable> &a, const shared_ptr<Hittable> &b, int axis) {
+    AABB box_a;
+    AABB box_b;
+
+    if (!a->bounding_box(0, 0, box_a) || !b->bounding_box(0, 0, box_b)) {
+        std::cerr << "No bounding box in bvh_node constructor.\n";
+    }
+
+    return box_a.min().coordinates[axis] < box_b.min().coordinates[axis];
+}
+
+inline bool box_x_compare(const shared_ptr<Hittable> &a, const shared_ptr<Hittable> &b) {
+    return box_compare(a, b, 0);
+}
+
+inline bool box_y_compare(const shared_ptr<Hittable> &a, const shared_ptr<Hittable> &b) {
+    return box_compare(a, b, 1);
+}
+
+inline bool box_z_compare(const shared_ptr<Hittable> &a, const shared_ptr<Hittable> &b) {
+    return box_compare(a, b, 2);
+}
+
+bool (*get_random_box_compare())(const shared_ptr<Hittable> &, const shared_ptr<Hittable> &) {
+    int axis = random_int(0, 2);
+
+    if (axis == 0) {
+        return &box_x_compare;
+    }
+    if (axis == 1) {
+        return &box_y_compare;
+    }
+    return &box_z_compare;
+}
+
 BVH_node::Bounding_Volume_Hierarchy_node(const vector<shared_ptr<Hittable>> &src_objects,
                                          size_t start, size_t end, double time0, double time1) {
     auto objects = src_objects; // modifiable array of the source
 
-    int axis = random_int(0, 2);
-    auto comparator = (axis == 0) ? box_x_compare
-                                  : (axis == 1) ? box_y_compare
-                                                : box_z_compare;
+    auto comparator = get_random_box_compare();
 
 
     if (size_t object_span = end - start; object_span == 1) {
