@@ -47,8 +47,8 @@ create_object(double choose_mat, const Point3 &center, const shared_ptr<Material
 Hittable_list random_scene() {
     Hittable_list world;
 
-    auto ground_material = make_shared<Diffuse>(Color(0.5, 0.5, 0.5));
-    world.add(make_shared<Sphere>(Point3(0, -1000, 0), 1000, ground_material));
+    auto ground_material = make_shared<Checker_texture>(Color(0.2, 0.3, 0.1), Color(0.9, 0.9, 0.9));
+    world.add(make_shared<Sphere>(Point3(0, -1000, 0), 1000, make_shared<Diffuse>(ground_material)));
 
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {
