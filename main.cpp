@@ -48,7 +48,12 @@ int main() {
     // Scene with 2 spheres, one red, one blue : red_blue_sphere(world);
 
     // Camera
-    Camera camera(Point3(-2, 2, 1), Point3(0, 0, -1), Vec3(0, 1, 0), 20.0, aspect_ratio);
+    const Point3 look_from(3, 3, 2);
+    const Point3 look_at(0, 0, -1);
+    const Vec3 view_up(0, 1, 0);
+    auto distance_to_focus = (look_from - look_at).length();
+    auto aperture = 2.0;
+    Camera camera(look_from, look_at, view_up, 20, aspect_ratio, aperture, distance_to_focus);
 
     // Render
     cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
@@ -90,6 +95,6 @@ void three_spheres(Hittable_list &world) {
     world.add(make_shared<Sphere>(Point3(0.0, -100.5, -1.0), 100.0, material_ground));
     world.add(make_shared<Sphere>(Point3(0.0, 0.0, -1.0), 0.5, material_center));
     world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, material_left));
-    world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.4, material_left));
+    world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.45, material_left));
     world.add(make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, material_right));
 }
