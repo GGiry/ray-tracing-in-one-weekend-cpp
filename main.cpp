@@ -8,6 +8,10 @@
 
 #include <iostream>
 
+void three_spheres(Hittable_list &world);
+
+void red_blue_sphere(Hittable_list &world);
+
 using namespace std;
 
 Color ray_color(const Ray &ray, const Hittable &world, int depth) {
@@ -39,19 +43,11 @@ int main() {
     // World
     Hittable_list world;
 
-    auto material_ground = make_shared<Diffuse>(Color(0.8, 0.8, 0.0));
-    auto material_center = make_shared<Diffuse>(Color(0.1, 0.2, 0.5));
-    auto material_left = make_shared<Dielectric>(1.5);
-    auto material_right = make_shared<Metal>(Color(0.8, 0.6, 0.2), 0.0);
-
-    world.add(make_shared<Sphere>(Point3(0.0, -100.5, -1.0), 100.0, material_ground));
-    world.add(make_shared<Sphere>(Point3(0.0, 0.0, -1.0), 0.5, material_center));
-    world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, material_left));
-    world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.4, material_left));
-    world.add(make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, material_right));
+    // Scene with 3 sphere, one metal, one diffuse and one dielectric:  three_spheres(world);
+    red_blue_sphere(world);
 
     // Camera
-    Camera camera;
+    Camera camera(90.0, aspect_ratio);
 
     // Render
     cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
@@ -73,4 +69,26 @@ int main() {
     cerr << "\nDone.\n";
 
     return 0;
+}
+
+void red_blue_sphere(Hittable_list &world) {
+    auto R = cos(pi / 4);
+    auto material_left = make_shared<Diffuse>(Color(0, 0, 1));
+    auto material_right = make_shared<Diffuse>(Color(1, 0, 0));
+
+    world.add(make_shared<Sphere>(Point3(-R, 0, -1), R, material_left));
+    world.add(make_shared<Sphere>(Point3(R, 0, -1), R, material_right));
+}
+
+void three_spheres(Hittable_list &world) {
+    auto material_ground = make_shared<Diffuse>(Color(0.8, 0.8, 0.0));
+    auto material_center = make_shared<Diffuse>(Color(0.1, 0.2, 0.5));
+    auto material_left = make_shared<Dielectric>(1.5);
+    auto material_right = make_shared<Metal>(Color(0.8, 0.6, 0.2), 0.0);
+
+    world.add(make_shared<Sphere>(Point3(0.0, -100.5, -1.0), 100.0, material_ground));
+    world.add(make_shared<Sphere>(Point3(0.0, 0.0, -1.0), 0.5, material_center));
+    world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, material_left));
+    world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.4, material_left));
+    world.add(make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, material_right));
 }
