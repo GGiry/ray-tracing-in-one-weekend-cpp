@@ -18,6 +18,8 @@ public:
                                                                           _material_ptr(std::move(material)) {};
 
     bool hit(const Ray &r, double t_min, double t_max, Hit_record &record) const override;
+
+    bool bounding_box(double time0, double time1, AABB &output_box) const override;
 };
 
 bool Sphere::hit(const Ray &ray, double t_min, double t_max, Hit_record &record) const {
@@ -49,5 +51,10 @@ bool Sphere::hit(const Ray &ray, double t_min, double t_max, Hit_record &record)
     return true;
 }
 
+bool Sphere::bounding_box(double time0, double time1, AABB &output_box) const {
+    output_box = AABB(_center - Vec3(_radius, _radius, _radius),
+                      _center + Vec3(_radius, _radius, _radius));
+    return true;
+}
 
 #endif //RAY_TRACING_IN_CPP_SPHERE_H

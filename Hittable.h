@@ -1,6 +1,7 @@
 #ifndef RAY_TRACING_IN_CPP_HITTABLE_H
 #define RAY_TRACING_IN_CPP_HITTABLE_H
 
+#include "aabb.h"
 #include "util.h"
 
 class Material;
@@ -23,6 +24,8 @@ public:
     virtual ~Hittable() = default;
 
     virtual bool hit(const Ray &ray, double t_min, double t_max, Hit_record &rec) const = 0;
+
+    virtual bool bounding_box(double time0, double time1, AABB &output_box) const = 0;
 };
 
 

@@ -24,6 +24,8 @@ public:
 
     bool hit(const Ray &ray, double t_min, double t_max, Hit_record &record) const override;
 
+    bool bounding_box(double time_0, double time_1, AABB &output_box) const override;
+
     [[nodiscard]] Point3 center(double time) const;
 };
 
@@ -56,6 +58,17 @@ bool Moving_sphere::hit(const Ray &ray, double t_min, double t_max, Hit_record &
     record.set_face_normal(ray, outward_normal);
     record.material_ptr = material_ptr;
 
+    return true;
+}
+
+bool Moving_sphere::bounding_box(double time_0, double time_1, AABB &output_box) const {
+    AABB box0(center(time_0) - Vec3(radius, radius, radius),
+              center(time_0) + Vec3(radius, radius, radius));
+
+    AABB box1(center(time_1) - Vec3(radius, radius, radius),
+              center(time_1) + Vec3(radius, radius, radius));
+
+    output_box = surrounding_box(box0, box1);
     return true;
 }
 
