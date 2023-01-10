@@ -20,6 +20,22 @@ public:
     bool hit(const Ray &r, double t_min, double t_max, Hit_record &record) const override;
 
     bool bounding_box(double time0, double time1, AABB &output_box) const override;
+
+private:
+    static void get_sphere_uv(const Point3 &point, double &u, double &v) {
+        // p: a given point on the sphere of radius one, centered at the origin.
+        // u: returned value [0,1] of angle around the Y axis from X=-1.
+        // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+        //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+        //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+        //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+
+        auto theta = acos(-point.y());
+        auto phi = atan2(-point.z(), point.x()) + pi;
+
+        u = phi / (2 * pi);
+        v = theta / pi;
+    }
 };
 
 bool Sphere::hit(const Ray &ray, double t_min, double t_max, Hit_record &record) const {
@@ -46,6 +62,7 @@ bool Sphere::hit(const Ray &ray, double t_min, double t_max, Hit_record &record)
     record.point = ray.at(root);
     Vec3 outward_normal = (record.point - _center) / _radius;
     record.set_face_normal(ray, outward_normal);
+    get_sphere_uv(outward_normal, record.u, record.v);
     record.material_ptr = _material_ptr;
 
     return true;

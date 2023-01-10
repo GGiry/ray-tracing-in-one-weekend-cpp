@@ -1,8 +1,11 @@
 #ifndef RAY_TRACING_IN_CPP_MATERIAL_H
 #define RAY_TRACING_IN_CPP_MATERIAL_H
 
+#include <utility>
+
 #include "util.h"
 #include "Hittable.h"
+#include "Texture.h"
 
 class Material {
 public:
@@ -17,15 +20,19 @@ enum class DiffuseType {
 
 class Diffuse : public Material {
 public:
-    Color albedo;
+    std::shared_ptr<Texture> albedo;
 
     Vec3 (*scatter_direction_function)(const Vec3 &);
 
-    explicit Diffuse(const Color &color) : albedo(color) {
+    explicit Diffuse(const Color &color) : albedo(std::make_shared<Solid_color>(color)) {
         scatter_direction_function = lambertian;
     }
 
-    Diffuse(const Color &color, DiffuseType type) : albedo(color) {
+    explicit Diffuse(shared_ptr<Texture> texture): albedo(std::move(texture)) {
+        scatter_direction_function = lambertian;
+    }
+
+    Diffuse(const Color &color, DiffuseType type) : albedo(std::make_shared<Solid_color>(color)) {
         switch (type) {
             using enum DiffuseType;
             case Simple: {
@@ -51,7 +58,7 @@ public:
         }
 
         scattered = Ray(record.point, scatter_direction, ray_in.time());
-        attenuation = albedo;
+        attenuation = albedo->value(record.u, record.v, record.point);
         return true;
     }
 
