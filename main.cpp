@@ -97,6 +97,13 @@ Hittable_list random_scene() {
     return world;
 }
 
+Hittable_list earth() {
+    auto earth_texture = make_shared<Image_texture>("earth-map.jpg");
+    auto earth_surface = make_shared<Diffuse>(earth_texture);
+    auto globe = make_shared<Sphere>(Point3(0, 0, 0), 2, earth_surface);
+
+    return Hittable_list(globe);
+}
 
 Color ray_color(const Ray &ray, const Hittable &world, int depth) {
     if (depth <= 0) {
@@ -148,13 +155,21 @@ int main() {
             vertical_field_of_view = 20;
             break;
 
-        default:
-            //case 3:
+        case 3:
             world = two_perlin_spheres();
             look_from = Point3(13, 2, 3);
             look_at = Point3(0, 0, 0);
             vertical_field_of_view = 20;
             break;
+
+        default:
+            // case 4:
+            world = earth();
+            look_from = Point3(13, 2, 3);
+            look_at = Point3(0, 0, 0);
+            vertical_field_of_view = 20.0;
+            break;
+
     }
 
     BVH_node bvh(world, 0, 1);
