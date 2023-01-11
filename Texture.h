@@ -54,7 +54,7 @@ public:
 class Noise_texture : public Texture {
 public:
     Perlin noise;
-    double scale;
+    double scale = 1.0;
 
     Noise_texture() = default;
 
