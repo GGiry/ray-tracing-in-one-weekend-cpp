@@ -47,6 +47,20 @@ public:
         return perlin_interp(c, u, v, w);
     }
 
+    [[nodiscard]] double turbulence(const Point3 &point, int depth = 7) const {
+        auto accum = 0.0;
+        auto tmp_point = point;
+        auto weight = 1.0;
+
+        for (int i = 0; i < depth; i++) {
+            accum += weight * noise(tmp_point);
+            weight *= 0.5;
+            tmp_point *= 2;
+        }
+
+        return fabs(accum);
+    }
+
 private:
     static const int point_count = 256;
     std::vector<Vec3> random_vectors;
