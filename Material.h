@@ -11,6 +11,10 @@ class Material {
 public:
     virtual ~Material() = default;
 
+    [[nodiscard]] virtual Color emitted(double u, double v, const Point3& p) const {
+        return {0,0,0};
+    }
+
     virtual bool scatter(const Ray &ray_in, const Hit_record &record, Color &attenuation, Ray &scattered) const = 0;
 };
 
@@ -127,6 +131,23 @@ private:
         return r0 + (1 - r0) * pow(1 - cosine, 5);
     }
 
+};
+
+class Diffuse_light : public Material  {
+public:
+    shared_ptr<Texture> emit;
+
+    explicit Diffuse_light(shared_ptr<Texture> texture) : emit(std::move(texture)) {}
+
+    explicit Diffuse_light(Color color) : emit(make_shared<Solid_color>(color)) {}
+
+    bool scatter( const Ray& ray_in, const Hit_record& record, Color& attenuation, Ray& scattered) const override {
+        return false;
+    }
+
+    [[nodiscard]] Color emitted(double u, double v, const Point3& point) const override {
+        return emit->value(u, v, point);
+    }
 };
 
 #endif //RAY_TRACING_IN_CPP_MATERIAL_H
