@@ -54,11 +54,15 @@ public:
 class Noise_texture : public Texture {
 public:
     Perlin noise;
+    double scale;
 
     Noise_texture() = default;
 
+    explicit Noise_texture(double _scale) : scale(_scale) {}
+
+
     [[nodiscard]] Color value(double u, double v, const Point3 &point) const override {
-        return Color(1, 1, 1) * noise.noise(point);
+        return Color(1, 1, 1) * noise.noise(scale * point);
     }
 };
 

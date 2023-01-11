@@ -57,7 +57,7 @@ Hittable_list two_spheres() {
 Hittable_list two_perlin_spheres() {
     Hittable_list objects;
 
-    auto perlin_texture = make_shared<Noise_texture>();
+    auto perlin_texture = make_shared<Noise_texture>(4);
 
     objects.add(make_shared<Sphere>(Point3(0, -1000, 0), 1000, make_shared<Diffuse>(perlin_texture)));
     objects.add(make_shared<Sphere>(Point3(0, 2, 0), 2, make_shared<Diffuse>(perlin_texture)));
