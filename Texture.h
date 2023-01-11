@@ -62,7 +62,7 @@ public:
 
 
     [[nodiscard]] Color value(double u, double v, const Point3 &point) const override {
-        return Color(1, 1, 1) * noise.noise(scale * point);
+        return Color(1, 1, 1) * 0.5 * (1.0 + noise.noise(scale * point));
     }
 };
 
