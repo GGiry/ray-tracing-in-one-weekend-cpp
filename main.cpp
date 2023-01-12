@@ -1,5 +1,6 @@
 #include "util.h"
 
+#include "aa_rectangle.h"
 #include "bvh.h"
 #include "Camera.h"
 #include "Color.h"
@@ -105,6 +106,19 @@ Hittable_list earth() {
     return Hittable_list(globe);
 }
 
+Hittable_list simple_light() {
+    Hittable_list objects;
+
+    auto perlin_texture = make_shared<Noise_texture>(4);
+    objects.add(make_shared<Sphere>(Point3(0, -1000, 0), 1000, make_shared<Diffuse>(perlin_texture)));
+    objects.add(make_shared<Sphere>(Point3(0, 2, 0), 2, make_shared<Diffuse>(perlin_texture)));
+
+    auto diffuse_light = make_shared<Diffuse_light>(Color(4, 4, 4));
+    objects.add(make_shared<xy_rectangle>(3, 5, 1, 3, -2, diffuse_light));
+
+    return objects;
+}
+
 Color ray_color(const Ray &ray, const Color &background_color, const Hittable &world, int depth) {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0) {
@@ -131,7 +145,7 @@ int main() {
     // Image
     const auto aspect_ratio = 16.0 / 9.0;
     const int image_width = 400;
-    const int sample_per_pixel = 100;
+    int sample_per_pixel = 100;
     const int max_depth = 50;
 
     // World
@@ -179,10 +193,12 @@ int main() {
 
         default:
             // case 5:
-            world = earth();
+            world = simple_light();
+            sample_per_pixel = 400;
             background_color = Color(0.0, 0.0, 0.0);
-            look_from = Point3(13, 2, 3);
-            look_at = Point3(0, 0, 0);
+            look_from = Point3(26, 3, 6);
+            look_at = Point3(0, 2, 0);
+            vertical_field_of_view = 20;
             break;
     }
 
