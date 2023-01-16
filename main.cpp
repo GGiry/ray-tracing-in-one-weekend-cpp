@@ -169,19 +169,19 @@ Scene choose_scene(int id) {
         case 2:
             scene.world = make_unique<BVH_node>(two_spheres(), 0, 1);
             scene.background = Color(0.70, 0.80, 1.00);
-            scene.camera = Camera(Point3(13, 2, 3), Point3(0, 0, 0), Vec3(0, 1, 0), 20, 16. / 9., 0.1, 10., 0, 1);
+            scene.camera = Camera(Point3(13, 2, 3), Point3(0, 0, 0), Vec3(0, 1, 0), 20, 16. / 9., 0., 10., 0, 1);
             break;
 
         case 3:
             scene.world = make_unique<BVH_node>(two_perlin_spheres(), 0, 1);
             scene.background = Color(0.70, 0.80, 1.00);
-            scene.camera = Camera(Point3(13, 2, 3), Point3(0, 0, 0), Vec3(0, 1, 0), 20, 16. / 9., 0.1, 10., 0, 1);
+            scene.camera = Camera(Point3(13, 2, 3), Point3(0, 0, 0), Vec3(0, 1, 0), 20, 16. / 9., 0., 10., 0, 1);
             break;
 
         case 4:
             scene.world = make_unique<BVH_node>(earth(), 0, 1);
             scene.background = Color(0.70, 0.80, 1.00);
-            scene.camera = Camera(Point3(13, 2, 3), Point3(0, 0, 0), Vec3(0, 1, 0), 20, 16. / 9., 0.1, 10., 0, 1);
+            scene.camera = Camera(Point3(13, 2, 3), Point3(0, 0, 0), Vec3(0, 1, 0), 20, 16. / 9., 0., 10., 0, 1);
 
             break;
 
@@ -189,7 +189,7 @@ Scene choose_scene(int id) {
             // case 5:
             scene.world = make_unique<BVH_node>(simple_light(), 0, 1);
             scene.background = Color(0.0, 0.0, 0.0);
-            scene.camera = Camera(Point3(26, 3, 6), Point3(0, 2, 0), Vec3(0, 1, 0), 20, 16. / 9., 0.1, 10., 0, 1);
+            scene.camera = Camera(Point3(26, 3, 6), Point3(0, 2, 0), Vec3(0, 1, 0), 20, 16. / 9., 0., 10., 0, 1);
             break;
     }
 
@@ -248,7 +248,7 @@ void create_jobs(const Image &image, const Scene &scene, mutex &mutex, vector<st
 
 int main() {
     // Image
-    Image image = {16.0 / 9.0, 800, 400, 50};
+    Image image = {16.0 / 9.0, 400, 100, 50};
 
     // World
     Scene scene = choose_scene(0);
