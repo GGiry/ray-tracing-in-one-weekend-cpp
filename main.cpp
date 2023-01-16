@@ -150,6 +150,11 @@ struct Ray_result {
     Color color = Color(0, 0, 0);
 };
 
+struct line_result {
+    size_t line_index = 0;
+    std::vector<Ray_result> results;
+};
+
 struct Scene {
     Camera camera;
     Color background;
@@ -211,44 +216,52 @@ public:
               sample_per_pixel(_sample_per_pixel), max_depth(_max_depth) {}
 };
 
+Color trace(const Scene &scene, const Image &image, int j, int i) {
+    Color pixel_color(0, 0, 0);
 
-void create_jobs(const Image &image, const Scene &scene, mutex &mutex, vector<std::future<Ray_result>> &m_futures) {
+    for (int s = 0; s < image.sample_per_pixel; ++s) {
+        auto u = (i + random_double()) / (image.width - 1);
+        auto v = (j + random_double()) / (image.height - 1);
+
+        Ray ray = scene.camera.get_ray(u, v);
+        pixel_color += ray_color(ray, scene.background, *scene.world,
+                                 image.max_depth);
+    }
+    pixel_color /= float(image.sample_per_pixel);
+    return pixel_color;
+}
+
+void create_jobs(const Image &image, const Scene &scene, vector<std::future<line_result>> &m_futures) {
     for (int j = image.height - 1; j >= 0; --j) {
-        for (int i = 0; i < image.width; ++i) {
-            auto future = std::async(
-                    launch::async | launch::deferred,
-                    [&scene, image, i, j]() {
+        auto future = std::async(
+                launch::async | launch::deferred,
+                [&scene, image, j]() {
+                    line_result result;
+                    result.line_index = j;
+                    for (int i = 0; i < image.width; ++i) {
                         const unsigned int index = (image.height - 1 - j) * image.width + i;
-                        Color pixel_color(0, 0, 0);
+                        Color pixel_color = trace(scene, image, j, i);
 
-                        for (int s = 0; s < image.sample_per_pixel; ++s) {
-                            auto u = (i + random_double()) / (image.width - 1);
-                            auto v = (j + random_double()) / (image.height - 1);
+                        Ray_result ray_result;
+                        ray_result.index = index;
 
-                            Ray ray = scene.camera.get_ray(u, v);
-                            pixel_color += ray_color(ray, scene.background, *scene.world,
-                                                     image.max_depth);
-                        }
-                        pixel_color /= float(image.sample_per_pixel);
+                        // apply gamma correction = 2 and store result
+                        ray_result.color = Color(sqrt(pixel_color[0]), sqrt(pixel_color[1]),
+                                                 sqrt(pixel_color[2]));
+                        result.results.push_back(ray_result);
+                    }
 
-                        Ray_result result;
-                        result.index = index;
-                        result.color = Color(sqrt(pixel_color[0]), sqrt(pixel_color[1]),
-                                             sqrt(pixel_color[2]));
-                        return result;
-                    });
+                    return result;
+                });
 
-            {
-                lock_guard lock(mutex);
-                m_futures.push_back(std::move(future));
-            }
-        }
+        m_futures.push_back(std::move(future));
     }
 }
 
+
 int main() {
     // Image
-    Image image = {16.0 / 9.0, 400, 100, 50};
+    Image image = {16.0 / 9.0, 400, 400, 50};
 
     // World
     Scene scene = choose_scene(0);
@@ -259,9 +272,9 @@ int main() {
     // Compute
     std::mutex mutex;
     std::condition_variable cvResults;
-    std::vector<std::future<Ray_result>> m_futures;
+    std::vector<std::future<line_result>> m_futures;
 
-    create_jobs(image, scene, mutex, m_futures);
+    create_jobs(image, scene, m_futures);
 
     const int pixel_count = image.width * image.height;
 
@@ -270,8 +283,8 @@ int main() {
     cerr << "\nWait until jobs are done.\n";
     {
         unique_lock lock(mutex);
-        cvResults.wait(lock, [&m_futures, &pixel_count] {
-            return m_futures.size() == pixel_count;
+        cvResults.wait(lock, [&m_futures, &image] {
+            return m_futures.size() == image.height;
         });
     }
 
@@ -283,18 +296,18 @@ int main() {
     auto done_count = 0;
     auto last_percentage = 0;
     auto current_percentage = 0;
-    for (std::future<Ray_result> &ray_result: m_futures) {
-        Ray_result result = ray_result.get();
-        done_count++;
+    for (std::future<line_result> &future_result: m_futures) {
 
-        current_percentage = int(double(done_count) / double(pixel_count) * 100.0);
-
-        if (current_percentage != last_percentage) {
-            cerr << "\rreconstruct: " << current_percentage << ' ' << flush;
-            last_percentage = current_percentage;
+        for (line_result result = future_result.get(); Ray_result ray_result: result.results) {
+            done_count++;
+            pixels[ray_result.index] = ray_result.color;
         }
 
-        pixels[result.index] = result.color;
+        current_percentage = int(double(done_count) / double(pixel_count) * 100.0);
+        if (current_percentage != last_percentage) {
+            cerr << "\rreconstruct: " << current_percentage << '%' << flush;
+            last_percentage = current_percentage;
+        }
     }
 
     cerr << "\nReconstruction Done.\n";
