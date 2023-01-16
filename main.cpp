@@ -10,6 +10,10 @@
 #include "Moving_sphere.h"
 
 #include <iostream>
+#include <algorithm>
+
+#include <mutex>
+#include <future>
 
 
 using namespace std;
@@ -141,94 +145,166 @@ Color ray_color(const Ray &ray, const Color &background_color, const Hittable &w
     return emitted + attenuation * ray_color(scattered, background_color, world, depth - 1);
 }
 
-int main() {
-    // Image
-    const auto aspect_ratio = 16.0 / 9.0;
-    const int image_width = 400;
-    int sample_per_pixel = 100;
-    const int max_depth = 50;
+struct Ray_result {
+    unsigned int index = 0;
+    Color color = Color(0, 0, 0);
+};
 
-    // World
-    Point3 look_from;
-    Point3 look_at;
-    auto vertical_field_of_view = 40.0;
-    auto aperture = 0.0;
-    auto background_color = Color(0, 0, 0);
+struct Scene {
+    Camera camera;
+    Color background;
+    unique_ptr<Hittable> world;
+};
 
-    Hittable_list world;
+Scene choose_scene(int id) {
+    Scene scene;
 
-    switch (0) {
+    switch (id) {
         case 1:
-            world = random_scene();
-            background_color = Color(0.70, 0.80, 1.00);
-            look_from = Point3(13, 2, 3);
-            look_at = Point3(0, 0, 0);
-            vertical_field_of_view = 20;
-            aperture = 0.1;
+            scene.world = make_unique<BVH_node>(random_scene(), 0, 1);
+            scene.background = Color(0.70, 0.80, 1.00);
+            scene.camera = Camera(Point3(13, 2, 3), Point3(0, 0, 0), Vec3(0, 1, 0), 20, 16. / 9., 0.1, 10., 0, 1);
             break;
 
         case 2:
-            world = two_spheres();
-            background_color = Color(0.70, 0.80, 1.00);
-            look_from = Point3(13, 2, 3);
-            look_at = Point3(0, 0, 0);
-            vertical_field_of_view = 20;
+            scene.world = make_unique<BVH_node>(two_spheres(), 0, 1);
+            scene.background = Color(0.70, 0.80, 1.00);
+            scene.camera = Camera(Point3(13, 2, 3), Point3(0, 0, 0), Vec3(0, 1, 0), 20, 16. / 9., 0.1, 10., 0, 1);
             break;
 
         case 3:
-            world = two_perlin_spheres();
-            background_color = Color(0.70, 0.80, 1.00);
-            look_from = Point3(13, 2, 3);
-            look_at = Point3(0, 0, 0);
-            vertical_field_of_view = 20;
+            scene.world = make_unique<BVH_node>(two_perlin_spheres(), 0, 1);
+            scene.background = Color(0.70, 0.80, 1.00);
+            scene.camera = Camera(Point3(13, 2, 3), Point3(0, 0, 0), Vec3(0, 1, 0), 20, 16. / 9., 0.1, 10., 0, 1);
             break;
 
         case 4:
-            world = earth();
-            background_color = Color(0.70, 0.80, 1.00);
-            look_from = Point3(13, 2, 3);
-            look_at = Point3(0, 0, 0);
-            vertical_field_of_view = 20.0;
+            scene.world = make_unique<BVH_node>(earth(), 0, 1);
+            scene.background = Color(0.70, 0.80, 1.00);
+            scene.camera = Camera(Point3(13, 2, 3), Point3(0, 0, 0), Vec3(0, 1, 0), 20, 16. / 9., 0.1, 10., 0, 1);
+
             break;
 
         default:
             // case 5:
-            world = simple_light();
-            sample_per_pixel = 400;
-            background_color = Color(0.0, 0.0, 0.0);
-            look_from = Point3(26, 3, 6);
-            look_at = Point3(0, 2, 0);
-            vertical_field_of_view = 20;
+            scene.world = make_unique<BVH_node>(simple_light(), 0, 1);
+            scene.background = Color(0.0, 0.0, 0.0);
+            scene.camera = Camera(Point3(26, 3, 6), Point3(0, 2, 0), Vec3(0, 1, 0), 20, 16. / 9., 0.1, 10., 0, 1);
             break;
     }
 
-    BVH_node bvh(world, 0, 1);
+    return scene;
+}
 
-    // Camera
-    const Vec3 view_up(0, 1, 0);
-    auto distance_to_focus = 10.0;
-    const auto image_height = static_cast<int>(image_width / aspect_ratio);
+class Image {
+public:
+    double aspect_ration = 0.0;
+    int width = 0;
+    int height = 0;
+    int sample_per_pixel = 0;
+    int max_depth = 0;
 
-    Camera camera(look_from, look_at, view_up, vertical_field_of_view, aspect_ratio, aperture, distance_to_focus, 0, 1);
+    Image() = default;
 
-    // Render
-    cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+    Image(double _aspect_ratio, int _width, int _sample_per_pixel, int _max_depth)
+            : aspect_ration(_aspect_ratio), width(_width), height(static_cast<int>(_width / _aspect_ratio)),
+              sample_per_pixel(_sample_per_pixel), max_depth(_max_depth) {}
+};
 
-    for (int j = image_height - 1; j >= 0; --j) {
-        cerr << "\rScanlines remaining: " << j << ' ' << flush;
-        for (int i = 0; i < image_width; ++i) {
-            Color pixel_color(0, 0, 0);
-            for (int s = 0; s < sample_per_pixel; ++s) {
-                auto u = (i + random_double()) / (image_width - 1);
-                auto v = (j + random_double()) / (image_height - 1);
-                Ray ray = camera.get_ray(u, v);
-                pixel_color += ray_color(ray, background_color, bvh, max_depth);
+
+void create_jobs(const Image &image, const Scene &scene, mutex &mutex, vector<std::future<Ray_result>> &m_futures) {
+    for (int j = image.height - 1; j >= 0; --j) {
+        for (int i = 0; i < image.width; ++i) {
+            auto future = std::async(
+                    launch::async | launch::deferred,
+                    [&scene, image, i, j]() {
+                        const unsigned int index = (image.height - 1 - j) * image.width + i;
+                        Color pixel_color(0, 0, 0);
+
+                        for (int s = 0; s < image.sample_per_pixel; ++s) {
+                            auto u = (i + random_double()) / (image.width - 1);
+                            auto v = (j + random_double()) / (image.height - 1);
+
+                            Ray ray = scene.camera.get_ray(u, v);
+                            pixel_color += ray_color(ray, scene.background, *scene.world,
+                                                     image.max_depth);
+                        }
+                        pixel_color /= float(image.sample_per_pixel);
+
+                        Ray_result result;
+                        result.index = index;
+                        result.color = Color(sqrt(pixel_color[0]), sqrt(pixel_color[1]),
+                                             sqrt(pixel_color[2]));
+                        return result;
+                    });
+
+            {
+                lock_guard lock(mutex);
+                m_futures.push_back(std::move(future));
             }
-            write_color(cout, pixel_color, sample_per_pixel);
         }
     }
+}
 
-    cerr << "\nDone.\n";
+int main() {
+    // Image
+    Image image = {16.0 / 9.0, 800, 400, 50};
+
+    // World
+    Scene scene = choose_scene(0);
+
+    cerr << "image_width: " << image.width << endl;
+    cerr << "image_height: " << image.height << endl;
+
+    // Compute
+    std::mutex mutex;
+    std::condition_variable cvResults;
+    std::vector<std::future<Ray_result>> m_futures;
+
+    create_jobs(image, scene, mutex, m_futures);
+
+    const int pixel_count = image.width * image.height;
+
+    cerr << "Pixel count: " << pixel_count << endl;
+
+    cerr << "\nWait until jobs are done.\n";
+    {
+        unique_lock lock(mutex);
+        cvResults.wait(lock, [&m_futures, &pixel_count] {
+            return m_futures.size() == pixel_count;
+        });
+    }
+
+    cerr << "\nComputation Done.\n";
+
+    auto pixels = vector<Color>(pixel_count, Color(0, 0, 0));
+
+    // reconstruct image.
+    auto done_count = 0;
+    auto last_percentage = 0;
+    auto current_percentage = 0;
+    for (std::future<Ray_result> &ray_result: m_futures) {
+        Ray_result result = ray_result.get();
+        done_count++;
+
+        current_percentage = int(double(done_count) / double(pixel_count) * 100.0);
+
+        if (current_percentage != last_percentage) {
+            cerr << "\rreconstruct: " << current_percentage << ' ' << flush;
+            last_percentage = current_percentage;
+        }
+
+        pixels[result.index] = result.color;
+    }
+
+    cerr << "\nReconstruction Done.\n";
+
+    // Output image
+    cout << "P3\n" << image.width << ' ' << image.height << "\n255\n";
+
+    for (unsigned int i = 0; i < pixel_count; ++i) {
+        write_color(cout, pixels[i]);
+    }
 
     return 0;
 }
