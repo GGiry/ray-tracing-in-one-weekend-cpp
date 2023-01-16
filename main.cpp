@@ -140,6 +140,9 @@ Hittable_list cornell_box() {
     objects.add(make_shared<xz_rectangle>(0, 555, 0, 555, 555, white));
     objects.add(make_shared<xy_rectangle>(0, 555, 0, 555, 555, white));
 
+    objects.add(make_shared<Box>(Point3(130, 0, 65), Point3(295, 165, 230), white));
+    objects.add(make_shared<Box>(Point3(265, 0, 295), Point3(430, 330, 460), white));
+
     return objects;
 }
 
