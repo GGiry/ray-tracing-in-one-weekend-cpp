@@ -8,6 +8,7 @@
 #include "Sphere.h"
 #include "Material.h"
 #include "Moving_sphere.h"
+#include "box.h"
 
 #include <iostream>
 #include <algorithm>
@@ -124,6 +125,24 @@ Hittable_list simple_light() {
     return objects;
 }
 
+Hittable_list cornell_box() {
+    Hittable_list objects;
+
+    auto red = make_shared<Diffuse>(Color(.65, .05, .05));
+    auto white = make_shared<Diffuse>(Color(.73, .73, .73));
+    auto green = make_shared<Diffuse>(Color(.12, .45, .15));
+    auto light = make_shared<Diffuse_light>(Color(15, 15, 15));
+
+    objects.add(make_shared<yz_rectangle>(0, 555, 0, 555, 555, green));
+    objects.add(make_shared<yz_rectangle>(0, 555, 0, 555, 0, red));
+    objects.add(make_shared<xz_rectangle>(213, 343, 227, 332, 554, light));
+    objects.add(make_shared<xz_rectangle>(0, 555, 0, 555, 0, white));
+    objects.add(make_shared<xz_rectangle>(0, 555, 0, 555, 555, white));
+    objects.add(make_shared<xy_rectangle>(0, 555, 0, 555, 555, white));
+
+    return objects;
+}
+
 Color ray_color(const Ray &ray, const Color &background_color, const Hittable &world, int depth) {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0) {
@@ -162,8 +181,32 @@ struct Scene {
     unique_ptr<Hittable> world;
 };
 
-Scene choose_scene(int id) {
+class Image {
+public:
+    double aspect_ratio = 0.0;
+    int width = 0;
+    int height = 0;
+    int sample_per_pixel = 0;
+    int max_depth = 0;
+
+    Image() = default;
+
+    Image(double _aspect_ratio, int _width, int _sample_per_pixel, int _max_depth)
+            : aspect_ratio(_aspect_ratio), width(_width), height(static_cast<int>(_width / _aspect_ratio)),
+              sample_per_pixel(_sample_per_pixel), max_depth(_max_depth) {}
+
+
+    void set_width(int _width) {
+        width = _width;
+        height = static_cast<int>(width / aspect_ratio);
+    }
+};
+
+Scene choose_scene(int id, Image &image) {
     Scene scene;
+
+    image.aspect_ratio = 16. / 9.;
+    image.set_width(800);
 
     switch (id) {
         case 1:
@@ -191,31 +234,28 @@ Scene choose_scene(int id) {
 
             break;
 
-        default:
-            // case 5:
+        case 5:
             scene.world = make_unique<BVH_node>(simple_light(), 0, 1);
             scene.background = Color(0.0, 0.0, 0.0);
             scene.camera = Camera(Point3(26, 3, 6), Point3(0, 2, 0), Vec3(0, 1, 0), 20, 16. / 9., 0., 10., 0, 1);
+            break;
+
+        default:
+            // case 6:
+            scene.world = make_unique<BVH_node>(cornell_box(), 0, 1);
+
+            image.aspect_ratio = 1.;
+            image.set_width(600);
+            image.sample_per_pixel = 200;
+
+            scene.background = Color(0, 0, 0);
+            scene.camera = Camera(Point3(278, 278, -800), Point3(278, 278, 0), Vec3(0, 1, 0), 40, image.aspect_ratio, 0,
+                                  10, 0, 1);
             break;
     }
 
     return scene;
 }
-
-class Image {
-public:
-    double aspect_ration = 0.0;
-    int width = 0;
-    int height = 0;
-    int sample_per_pixel = 0;
-    int max_depth = 0;
-
-    Image() = default;
-
-    Image(double _aspect_ratio, int _width, int _sample_per_pixel, int _max_depth)
-            : aspect_ration(_aspect_ratio), width(_width), height(static_cast<int>(_width / _aspect_ratio)),
-              sample_per_pixel(_sample_per_pixel), max_depth(_max_depth) {}
-};
 
 Color trace(const Scene &scene, const Image &image, int j, int i) {
     Color pixel_color(0, 0, 0);
@@ -262,10 +302,10 @@ void create_jobs(const Image &image, const Scene &scene, vector<std::future<line
 
 int main() {
     // Image
-    Image image = {16.0 / 9.0, 400, 400, 50};
+    Image image = {16.0 / 9.0, 600, 200, 50};
 
     // World
-    Scene scene = choose_scene(0);
+    Scene scene = choose_scene(0, image);
 
     cerr << "image_width: " << image.width << endl;
     cerr << "image_height: " << image.height << endl;
