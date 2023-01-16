@@ -6,15 +6,17 @@
 class Camera {
 public:
     Point3 origin = Point3(0, 0, 0);
-    Point3 lower_left_corner;
-    Vec3 horizontal;
-    Vec3 vertical;
-    Vec3 u;
-    Vec3 v;
-    Vec3 w;
-    double lens_radius;
-    double shutter_open_time;
-    double shutter_close_time;
+    Point3 lower_left_corner = Point3(0, 0, 0);
+    Vec3 horizontal = Vec3(0, 0, 0);
+    Vec3 vertical = Vec3(0, 0, 0);
+    Vec3 u = Vec3(0, 0, 0);
+    Vec3 v = Vec3(0, 0, 0);
+    Vec3 w = Vec3(0, 0, 0);
+    double lens_radius = 0;
+    double shutter_open_time = 0;
+    double shutter_close_time = 0;
+
+    Camera() = default;
 
     Camera(
             Point3 look_from,
