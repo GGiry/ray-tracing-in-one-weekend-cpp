@@ -119,6 +119,7 @@ Hittable_list simple_light() {
 
     auto diffuse_light = make_shared<Diffuse_light>(Color(4, 4, 4));
     objects.add(make_shared<xy_rectangle>(3, 5, 1, 3, -2, diffuse_light));
+    objects.add(make_shared<Sphere>(Point3(0, 8, 0), 2, diffuse_light));
 
     return objects;
 }
@@ -280,7 +281,7 @@ int main() {
 
     cerr << "Pixel count: " << pixel_count << endl;
 
-    cerr << "\nWait until jobs are done.\n";
+    cerr << "\nWait until jobs are created.\n";
     {
         unique_lock lock(mutex);
         cvResults.wait(lock, [&m_futures, &image] {
@@ -288,7 +289,8 @@ int main() {
         });
     }
 
-    cerr << "\nComputation Done.\n";
+    cerr << "\nJob creation done.\n";
+    cerr << "\nWait for job, line by line and reconstruct image.\n";
 
     auto pixels = vector<Color>(pixel_count, Color(0, 0, 0));
 
