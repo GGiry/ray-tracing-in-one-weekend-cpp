@@ -150,4 +150,19 @@ public:
     }
 };
 
+class Isotropic : public Material {
+public:
+    shared_ptr<Texture> albedo;
+
+    explicit Isotropic(Color c) : albedo(make_shared<Solid_color>(c)) {}
+    explicit Isotropic(shared_ptr<Texture> a) : albedo(std::move(a)) {}
+
+    bool scatter(const Ray& ray_in, const Hit_record& record, Color& attenuation, Ray& scattered) const override {
+        scattered = Ray(record.point, random_in_unit_sphere(), ray_in.time());
+        attenuation = albedo->value(record.u, record.v, record.point);
+        return true;
+    }
+
+};
+
 #endif //RAY_TRACING_IN_CPP_MATERIAL_H
