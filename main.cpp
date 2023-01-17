@@ -9,6 +9,7 @@
 #include "Material.h"
 #include "Moving_sphere.h"
 #include "box.h"
+#include "constant_medium.h"
 
 #include <iostream>
 #include <algorithm>
@@ -153,6 +154,35 @@ Hittable_list cornell_box() {
     return objects;
 }
 
+Hittable_list cornell_smoke() {
+    Hittable_list objects;
+
+    auto red = make_shared<Diffuse>(Color(.65, .05, .05));
+    auto white = make_shared<Diffuse>(Color(.73, .73, .73));
+    auto green = make_shared<Diffuse>(Color(.12, .45, .15));
+    auto light = make_shared<Diffuse_light>(Color(7, 7, 7));
+
+    objects.add(make_shared<yz_rectangle>(0, 555, 0, 555, 555, green));
+    objects.add(make_shared<yz_rectangle>(0, 555, 0, 555, 0, red));
+    objects.add(make_shared<xz_rectangle>(113, 443, 127, 432, 554, light));
+    objects.add(make_shared<xz_rectangle>(0, 555, 0, 555, 555, white));
+    objects.add(make_shared<xz_rectangle>(0, 555, 0, 555, 0, white));
+    objects.add(make_shared<xy_rectangle>(0, 555, 0, 555, 555, white));
+
+    shared_ptr<Hittable> box1 = make_shared<Box>(Point3(0, 0, 0), Point3(165, 330, 165), white);
+    box1 = make_shared<Rotate_y>(box1, 15);
+    box1 = make_shared<Translate>(box1, Vec3(265, 0, 295));
+
+    shared_ptr<Hittable> box2 = make_shared<Box>(Point3(0, 0, 0), Point3(165, 165, 165), white);
+    box2 = make_shared<Rotate_y>(box2, -18);
+    box2 = make_shared<Translate>(box2, Vec3(130, 0, 65));
+
+    objects.add(make_shared<Constant_medium>(box1, 0.01, Color(0, 0, 0)));
+    objects.add(make_shared<Constant_medium>(box2, 0.01, Color(1, 1, 1)));
+
+    return objects;
+}
+
 Color ray_color(const Ray &ray, const Color &background_color, const Hittable &world, int depth) {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0) {
@@ -250,8 +280,7 @@ Scene choose_scene(int id, Image &image) {
             scene.camera = Camera(Point3(26, 3, 6), Point3(0, 2, 0), Vec3(0, 1, 0), 20, 16. / 9., 0., 10., 0, 1);
             break;
 
-        default:
-            // case 6:
+        case 6:
             scene.world = make_unique<BVH_node>(cornell_box(), 0, 1);
 
             image.aspect_ratio = 1.;
@@ -262,6 +291,20 @@ Scene choose_scene(int id, Image &image) {
             scene.camera = Camera(Point3(278, 278, -800), Point3(278, 278, 0), Vec3(0, 1, 0), 40, image.aspect_ratio, 0,
                                   10, 0, 1);
             break;
+
+        default:
+            // case 7:
+            scene.world = make_unique<BVH_node>(cornell_smoke(), 0, 1);
+
+            image.aspect_ratio = 1.;
+            image.set_width(600);
+            image.sample_per_pixel = 200;
+
+            scene.background = Color(0, 0, 0);
+            scene.camera = Camera(Point3(278, 278, -800), Point3(278, 278, 0), Vec3(0, 1, 0), 40, image.aspect_ratio, 0,
+                                  10, 0, 1);
+            break;
+
     }
 
     return scene;
