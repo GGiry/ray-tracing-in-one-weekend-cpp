@@ -367,7 +367,7 @@ Scene choose_scene(int id, Image &image) {
             scene.world = make_unique<Hittable_list>(final_scene());
             image.aspect_ratio = 1.;
             image.set_width(800);
-            image.sample_per_pixel = 1000;
+            image.sample_per_pixel = 10;
 
             scene.background = Color(0, 0, 0);
             scene.camera = Camera(Point3(478, 278, -600),
@@ -398,17 +398,23 @@ Color trace(const Scene &scene, const Image &image, int j, int i) {
 }
 
 void create_jobs(const Image &image, const Scene &scene, vector<std::future<line_result>> &m_futures) {
-    for (int j = image.height - 1; j >= 0; --j) {
+    const auto processor_count = std::thread::hardware_concurrency();
+    const auto pixel_per_proc = (image.width * image.height) / processor_count;
+
+    for (int proc_idx = 0; proc_idx < processor_count; ++proc_idx) {
         auto future = std::async(
                 launch::async | launch::deferred,
-                [&scene, image, j]() {
+                [&scene, image, proc_idx, pixel_per_proc]() {
                     line_result result;
-                    for (int i = 0; i < image.width; ++i) {
-                        const unsigned int index = (image.height - 1 - j) * image.width + i;
+                    for (int pixel_idx = 0; pixel_idx < pixel_per_proc; ++pixel_idx) {
+                        auto real_pixel_idx = proc_idx * pixel_per_proc + pixel_idx;
+                        auto i = real_pixel_idx % image.height;
+                        auto j = image.height - real_pixel_idx / image.height;
+
                         Color pixel_color = trace(scene, image, j, i);
 
                         Ray_result ray_result;
-                        ray_result.index = index;
+                        ray_result.index = real_pixel_idx;
 
                         // apply gamma correction = 2 and store result
                         ray_result.color = Color(sqrt(pixel_color[0]), sqrt(pixel_color[1]),
