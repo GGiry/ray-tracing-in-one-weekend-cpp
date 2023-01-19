@@ -435,7 +435,6 @@ int main() {
     cerr << "image_height: " << image.height << endl;
 
     // Compute
-    std::mutex mutex;
     std::condition_variable cvResults;
     std::vector<std::future<line_result>> m_futures;
 
@@ -444,14 +443,6 @@ int main() {
     const int pixel_count = image.width * image.height;
 
     cerr << "Pixel count: " << pixel_count << endl;
-
-    cerr << "\nWait until jobs are created.\n";
-    {
-        unique_lock lock(mutex);
-        cvResults.wait(lock, [&m_futures, &image] {
-            return m_futures.size() == image.height;
-        });
-    }
 
     cerr << "\nJob creation done.\n";
     cerr << "\nWait for job, line by line and reconstruct image.\n";
