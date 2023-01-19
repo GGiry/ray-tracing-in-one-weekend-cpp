@@ -270,7 +270,6 @@ struct Ray_result {
 };
 
 struct line_result {
-    size_t line_index = 0;
     std::vector<Ray_result> results;
 };
 
@@ -404,7 +403,6 @@ void create_jobs(const Image &image, const Scene &scene, vector<std::future<line
                 launch::async | launch::deferred,
                 [&scene, image, j]() {
                     line_result result;
-                    result.line_index = j;
                     for (int i = 0; i < image.width; ++i) {
                         const unsigned int index = (image.height - 1 - j) * image.width + i;
                         Color pixel_color = trace(scene, image, j, i);
@@ -463,7 +461,7 @@ int main() {
     // reconstruct image.
     auto done_count = 0;
     auto last_percentage = 0;
-    auto current_percentage = 0;
+    int current_percentage;
     for (std::future<line_result> &future_result: m_futures) {
 
         for (line_result result = future_result.get(); Ray_result ray_result: result.results) {
